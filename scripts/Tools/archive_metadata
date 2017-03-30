@@ -221,8 +221,6 @@ def get_pp_status(case_dict):
     msg_avg = dict()
     msg_diags = dict()
     comps = ['atm','ice','lnd','ocn']
-    case_dict['tseries_status'] = 'Pending'
-    case_dict['cmor_status'] = 'Pending'
 
     pp_log_dir =  os.path.join(case_dict['CASEROOT'],'postprocess','logs')
 
@@ -246,26 +244,27 @@ def get_pp_status(case_dict):
             log_file = os.path.join(pp_log_dir,comp+'_averages.log')
             if (is_last_process_complete(log_file, msg_avg[comp], 
                                          'Average list complies with standards.')):
-                case_dict[comp+'_avg_status'] = 'Completed'
+                case_dict[comp+'_avg_status'] = 'Complete'
             else:
-                case_dict[comp+'_avg_status'] = 'Unknown'
+                case_dict[comp+'_avg_status'] = 'Started'
 
         if os.path.exists(pp_log_dir+'/'+comp+'_diagnostics.log'):
             log_file = os.path.join(pp_log_dir,comp+'_diagnostics.log')
             if (is_last_process_complete(log_file, msg_diags[comp], 'ncks version')):
-                case_dict[comp+'_diag_status'] = 'Completed'
+                case_dict[comp+'_diag_status'] = 'Complete'
             else:
-                case_dict[comp+'_diag_status'] = 'Unknown'
+                case_dict[comp+'_diag_status'] = 'Started'
 
+    case_dict['tseries_status'] = 'Pending'
     if os.path.exists(pp_log_dir+'/timeseries.log'):
       log_file = os.path.join(pp_log_dir,'timeseries.log')
       if (is_last_process_complete(log_file, 'Successfully completed generating variable time-series files', 
                                    'cesm_tseries_generator.py')):
-          case_dict['tseries_status'] = 'Completed'
+          case_dict['tseries_status'] = 'Complete'
       else:
-          case_dict['tseries_status'] = 'Unknown'
+          case_dict['tseries_status'] = 'Started'
               
-
+    case_dict['cmor_status'] = 'Pending'
     if os.path.exists(pp_log_dir+'/cmor.log'):
       log_file = os.path.join(pp_log_dir,'cmor.log')
       #TODO - need to check the CMOR log when it becomes available
@@ -554,7 +553,7 @@ def update_local_repo(case_dict, ignoreLogs):
     def update_temp_repo(arg, directory, fnames):
     # *******************************************
         """ update_local_svn 
-        os.paty.walk handler function to copy and add files
+        os.path.walk handler function to copy and add files
         to the archive_temp_dir
         Note - this function must be nested in the update_local_repo
         function in order for the recursion to work correctly.
@@ -595,7 +594,7 @@ def update_local_repo(case_dict, ignoreLogs):
     def remove_temp_repo(arg, directory, fnames):
     # *******************************************
         """ remove_local_svn 
-        os.paty.walk handler function to remove files from 
+        os.path.walk handler function to remove files from 
         the archive_temp_dir that are no longer in the caseroot
         Note - this function must be nested in the update_local_repo
         function in order for the recursion to work correctly.
