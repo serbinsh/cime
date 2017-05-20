@@ -198,18 +198,22 @@ class EntryID(GenericXML):
         subgroup is ignored in the general routine and applied in specific methods
         """
         expect(subgroup is None, "Subgroup not supported")
+        str_value = self.get_valid_value_string(node, value, vid, ignore_type)
+        node.set("value", str_value)
+        return value
+
+    def get_valid_value_string(self, node, value,vid=None,  ignore_type=False):
         valid_values = self._get_valid_values(node)
         if ignore_type:
             expect(type(value) is str, "Value must be type string if ignore_type is true")
             str_value = value
-        else:
-            type_str = self._get_type_info(node)
-            str_value = convert_to_string(value, type_str, vid)
+            return str_value
+        type_str = self._get_type_info(node)
+        str_value = convert_to_string(value, type_str, vid)
+
         if valid_values is not None and not str_value.startswith('$'):
             expect(str_value in valid_values, "Did not find %s in valid values for %s: %s" % (value, vid, valid_values))
-        node.set("value", str_value)
-
-        return value
+        return str_value
 
     def set_value(self, vid, value, subgroup=None, ignore_type=False):
         """
@@ -379,9 +383,12 @@ class EntryID(GenericXML):
                     if f2val != f1val:
                         f1value_nodes = self.get_nodes("value", root=node)
                         for valnode in f1value_nodes:
-                            f2valnode = other.get_node("value", root=f2match, attributes=valnode.attrib)
-                            if f2valnode.text != valnode.text:
-                                xmldiffs["%s:%s"%(vid,valnode.attrib)] = [valnode.text, f2valnode.text]
+                            f2valnodes = other.get_nodes("value", root=f2match, attributes=valnode.attrib)
+                            for f2valnode in f2valnodes:
+                                if valnode.attrib is None and f2valnode.attrib is None or \
+                                   f2valnode.attrib == valnode.attrib:
+                                    if other.get_resolved_value(f2valnode.text) != self.get_resolved_value(valnode.text):
+                                        xmldiffs["%s:%s"%(vid,valnode.attrib)] = [valnode.text, f2valnode.text]
 
         return xmldiffs
 
